@@ -1,0 +1,24 @@
+* About
+
+This example demonstrates that subsequent ~terraform apply~ overwrites the
+previously applied *google_artifact_registry_repository_iam_binding* resource.
+
+There are three bindings:
+
+|----------+-----------------------------------+------------+---------------------|
+| policy # | roles                             | principals | resource            |
+|----------+-----------------------------------+------------+---------------------|
+|        1 | - "roles/artifactregistry.reader" | foobar     | x (docker registry) |
+|----------+-----------------------------------+------------+---------------------|
+|        2 | - "roles/artifactregistry.writer" | foobar     | x (docker registry) |
+|----------+-----------------------------------+------------+---------------------|
+|        3 | - "roles/artifactregistry.reader" | foobaz     | y (docker registry) |
+|----------+-----------------------------------+------------+---------------------|
+
+
+Since policy 1 & 2 apply on the same resource, the behaviour of the
+*google_artifact_registry_repository_iam_binding* is to choose only one of them
+to apply /authoritatively/.
+
+Since policy 3 is about another resource, it's fine even though it shares the
+same role as 1.

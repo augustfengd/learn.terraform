@@ -1,0 +1,37 @@
+* About
+
+This example demonstrates that subsequent ~terraform apply~ overwrites the
+previously applied *google_project_iam_binding* resource.
+This example demonstrates that subsequent ~terraform apply~ overwrites the
+previously applied *google_project_iam_binding* resource.
+
+There are three bindings:
+
+|----------+-----------------------------------+------------+---------------------|
+| policy # | roles                             | principals | resource            |
+|----------+-----------------------------------+------------+---------------------|
+|        1 | - "roles/artifactregistry.reader" | foobar     | x (docker registry) |
+|----------+-----------------------------------+------------+---------------------|
+|        2 | - "roles/artifactregistry.writer" | foobar     | x (docker registry) |
+|----------+-----------------------------------+------------+---------------------|
+|        3 | - "roles/artifactregistry.reader" | foobaz     | y (docker registry) |
+|----------+-----------------------------------+------------+---------------------|
+
+In the *../google_artifact_registry_repository_iam_binding.a* example, the
+~terraform apply~ were overriding the bindings on the docker registry resource,
+and it seems here that the overriding is happening at the role resource level.
+
+* Shell
+
+#+name: shell
+#+begin_src shell
+it=$(mktemp)
+terraform output -raw private_key | base64 -d > $it
+
+docker run -it --rm --volume ${it}:/it --volume /var/run/docker.sock:/var/run/docker.sock google/cloud-sdk
+# after
+gcloud auth activate-service-account foobar@augustfengd.iam.gserviceaccount.com --key-file=/it
+gcloud auth configure-docker us-east1-docker.pkg.dev
+docker tag bash us-east1-docker.pkg.dev/augustfengd/foobar/bash
+docker push us-east1-docker.pkg.dev/augustfengd/foobar/bash
+#+end_src
